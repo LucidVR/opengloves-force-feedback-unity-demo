@@ -41,11 +41,11 @@ public class FFBManager : MonoBehaviour
     {
         if (hand.handType == SteamVR_Input_Sources.LeftHand)
         {
-            _ffbProviderLeft.SetFFB(input);
+            StartCoroutine(_ffbProviderLeft.SetFFB(input));
         }
         else
         {
-            _ffbProviderRight.SetFFB(input);
+            StartCoroutine(_ffbProviderRight.SetFFB(input));
         }
     }
     
@@ -137,14 +137,6 @@ public class FFBManager : MonoBehaviour
     {
         Stop();
     }
-
-    public static float InverseLerp(Vector3 a, Vector3 b, Vector3 value)
-    {
-        Vector3 AB = b - a;
-        Vector3 AV = value - a;
-        return Vector3.Dot(AV, AB) / Vector3.Dot(AB, AB);
-    }
-    
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -179,9 +171,9 @@ class FFBProvider
         _namedPipeProvider.Connect();
     }
    
-    public void SetFFB(VRFFBInput input)
+    public IEnumerator SetFFB(VRFFBInput input)
     {
-        _namedPipeProvider.Send(input);
+        yield return _namedPipeProvider.Send(input);
     }
 
     public void Close()
@@ -200,9 +192,17 @@ class NamedPipesProvider
 
     public void Connect()
     {
-        Debug.Log("Connecting to pipe");
-        _pipe.Connect();
-        Debug.Log("Successfully connected to pipe");
+        try
+        {
+            Debug.Log("Connecting to pipe");
+            _pipe.Connect();
+            Debug.Log("Successfully connected to pipe");
+        }
+        catch (Exception e)
+        {
+            Debug.Log("Unable to connect to pipe... Assuming that hand is inactive.");
+        }
+        
     }
 
     public void Disconnect()
@@ -213,7 +213,7 @@ class NamedPipesProvider
         }
     }
 
-    public void Send(VRFFBInput input)
+    public bool Send(VRFFBInput input)
     {
         if (_pipe.IsConnected)
         {
@@ -228,6 +228,10 @@ class NamedPipesProvider
             _pipe.Write(arr, 0, size);
             
             Debug.Log("Sent force feedback message.");
+
+            return true;
         }
+
+        return false;
     }
 }
