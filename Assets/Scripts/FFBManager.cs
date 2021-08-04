@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using Valve.VR;
@@ -41,11 +42,11 @@ public class FFBManager : MonoBehaviour
     {
         if (hand.handType == SteamVR_Input_Sources.LeftHand)
         {
-            StartCoroutine(_ffbProviderLeft.SetFFB(input));
+            _ffbProviderLeft.SetFFB(input);
         }
         else
         {
-            StartCoroutine(_ffbProviderRight.SetFFB(input));
+            _ffbProviderRight.SetFFB(input);
         }
     }
     
@@ -171,9 +172,9 @@ class FFBProvider
         _namedPipeProvider.Connect();
     }
    
-    public IEnumerator SetFFB(VRFFBInput input)
+    public bool SetFFB(VRFFBInput input)
     {
-        yield return _namedPipeProvider.Send(input);
+         return _namedPipeProvider.Send(input);
     }
 
     public void Close()
@@ -217,6 +218,7 @@ class NamedPipesProvider
     {
         if (_pipe.IsConnected)
         {
+            Debug.Log("running task");
             int size = Marshal.SizeOf(input);
             byte[] arr = new byte[size];
 
@@ -224,9 +226,9 @@ class NamedPipesProvider
             Marshal.StructureToPtr(input, ptr, true);
             Marshal.Copy(ptr, arr, 0, size);
             Marshal.FreeHGlobal(ptr);
-            
+
             _pipe.Write(arr, 0, size);
-            
+
             Debug.Log("Sent force feedback message.");
 
             return true;
