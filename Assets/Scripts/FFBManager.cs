@@ -79,7 +79,7 @@ public class FFBManager : MonoBehaviour
             
             //calculate angle from open to closed
             float openToClosed =
-                Quaternion.Angle(openHand.boneRotations[boneIndex], closedHand.boneRotations[boneIndex]);
+                Quaternion.Angle(openHand.boneRotations[boneIndex], closedHand.boneRotations[boneIndex]) * 1.3f;
             
             //get the ratio between open to poser and open to closed
             float curl = openToPoser / openToClosed;
@@ -105,7 +105,8 @@ public class FFBManager : MonoBehaviour
             }
             
             //The value we to pass is where 0 is full movement flexibility, so invert.
-            fingerCurlAverages[i] = Convert.ToInt16(1000 - (Mathf.FloorToInt(enumerator / fingerCurlValues[i].Count * 1000)));
+            fingerCurlAverages[i] = (short)Mathf.Clamp(Convert.ToInt16(1000 - (Mathf.FloorToInt(enumerator / fingerCurlValues[i].Count * 1000))), (short)0, (short)1000);
+
             
             Debug.Log(fingerCurlAverages[i]);
         }
